@@ -1,0 +1,15 @@
+name: "Test page"
+
+commands:
+  - {command: "echo hello", update_when_displayed: True, variable_identifier: "$result_1"}
+  - {command: "date | tr -d :", update_when_displayed: False, variable_identifier: "$result_2"}
+
+text:
+  - {text: "Output=$result_1", x: 1, y: 1, size: 1}
+  - {text: "Test2 = $result_2", x: 1, y: 10, size: 2}
+
+bmp:
+  - {file: "pages/images/test.bmp", x: 50, y: 1}
+
+graph:
+  - {graph_value: "rrrryyyyyggggrrrryyyyygggg", green_threshold: 2, yellow_threshold: 4, red_threshold: 8}
