@@ -6,3 +6,6 @@ serial:
 pages:
   page_directory: pages
 
+logs:
+  log_level: INFO
+  log_directory: logs

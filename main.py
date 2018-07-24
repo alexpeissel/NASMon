@@ -4,25 +4,37 @@
 Main module
 """
 
-__author__ = "Your Name"
+__author__ = "Alexander Peissel"
 __version__ = "0.1.0"
 __license__ = "MIT"
 
 import argparse
-from Monitor import Monitor
+import logging
+import logzero
 from logzero import logger
+from Monitor import Monitor
+
+
+def clamp(n, min_n, max_n):
+    return max(min(max_n, n), min_n)
 
 
 def main(args):
     """ Main entry point of the app """
+
+    # Configure logging
+    log_levels = [logging.INFO, logging.DEBUG]
+    clamped_verbosity = clamp(args.verbose, 0, len(log_levels) - 1)
+    #logzero.loglevel(log_levels[clamped_verbosity])
+    logzero.loglevel(logging.DEBUG)
     logger.info("Starting NASMon")
-    logger.debug("hello")
-    logger.info("info")
-    logger.warning("warning")
-    logger.error("error")
-    mon = Monitor(page_directory="pages", baudrate=115200, serial_port='/dev/cu.wchusbserial1420')
+    logger.info(args)
+
+    # TODO: Read config file
+
+    # Instantiate and start the monitor
+    mon = Monitor(page_directory=args.page_directory, baud_rate=args.baud_rate, serial_port=args.serial_port)
     mon.start()
-    mon.stop()
 
 
 if __name__ == "__main__":
@@ -36,7 +48,13 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--flag", action="store_true", default=False)
 
     # Optional argument which requires a parameter (eg. -d test)
-    parser.add_argument("-n", "--name", action="store", dest="name")
+    parser.add_argument("-p", "--page-dir", action="store", dest="page_directory", default="pages")
+
+    # Optional argument which requires a parameter (eg. -d test)
+    parser.add_argument("-b", "--baud-rate", action="store", dest="baud_rate", default="115200")
+
+    # Optional argument which requires a parameter (eg. -d test)
+    parser.add_argument("-s", "--serial-port", action="store", dest="serial_port", default="/dev/cu.wchusbserial1420")
 
     # Optional verbosity counter (eg. -v, -vv, -vvv, etc.)
     parser.add_argument(

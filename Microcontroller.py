@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Module Docstring
+Microcontroller
+Interface between application and Arduino.
 """
 
-__author__ = "Your Name"
+__author__ = "Alexander Peissel"
 __version__ = "0.1.0"
 __license__ = "MIT"
 
@@ -12,7 +13,7 @@ import serial
 import struct
 from logzero import logger
 
-class Microcontroler(object):
+class Microcontroller(object):
     """interface to an on-board microcontroller"""
 
     # Modes
@@ -71,14 +72,14 @@ class Microcontroler(object):
             data = []
         encoded = cobs.encode(str(bytearray(data)))
 
-        print("Sending: " + encoded + '\x00')
-        print((encoded + '\x00').encode("hex"))
+        logger.debug("Sending (chars): %s", encoded + '\x00')
+        logger.debug("Sending (hex): %s", (encoded + '\x00').encode("hex"))
         self._serial.write(encoded + '\x00')
 
         self.commands_sent += 1
         return True
 
-    def _reset_read_buf(self):
+    def _reset_read_buffer(self):
         self._read_buf[0:self._read_buf_pos] = [None] * self._read_buf_pos
         self._read_buf_pos = 0
 
@@ -99,7 +100,7 @@ class Microcontroler(object):
             if c == '\x00':
                 # grab the data and reset the buffer
                 data = self._read_buf[0:self._read_buf_pos]
-                self._reset_read_buf()
+                self._reset_read_buffer()
 
                 # return decoded data
                 data_length = str(len(data))
@@ -112,60 +113,67 @@ class Microcontroler(object):
             else:
                 self._read_buf[self._read_buf_pos] = c
                 self._read_buf_pos += 1
-                print self._read_buf[0:self._read_buf_pos]
+                #print self._read_buf[0:self._read_buf_pos]
 
                 # ugh. buffer overflow. wat do?
                 if self._read_buf_pos == len(self._read_buf):
-                    print(cobs.decode(str(bytearray(self._read_buf))).encode("hex"))
+                    #print(cobs.decode(str(bytearray(self._read_buf))).encode("hex"))
                     # resetting the buffer likely means the next recv will fail, too (we lost the start bits)
-                    self._reset_read_buf()
+                    self._reset_read_buffer()
                     raise RuntimeError("IO read buffer overflow :(")
 
-    def clear_displays(self):
-        data = struct.pack('>B', self.SEND_CLEAR_MODE)
+    def send_formatted_data(self, data_format, mode, *args):
+        print args
+        if args:
+            data = struct.pack(data_format, mode, *args)
+        else:
+            data = struct.pack(data_format, mode)
+
         self._send_command(data)
-        received = self._recv_command()
-        return recieved_data
+        received_data = self._recv_command()
+        return received_data
+
+    def ping(self):
+        response = self.send_formatted_data('>B', self.SEND_PING_MODE)
+        return response
+
+    def clear_displays(self):
+        response = self.send_formatted_data('>B', self.SEND_CLEAR_MODE)
+        return response
 
     def display_text(self, text, x, y, size):
-        data = struct.pack('>BBBB128s', self.SEND_TEXT_MODE, size, x, y, text)
-        self._send_command(data)
-        received = self._recv_command()
-        return recieved_data
+        response = self.send_formatted_data('>BBBB128s', self.SEND_TEXT_MODE, size, x, y, text)
+        return response
 
     def display_bmp(self, bmp, x, y, width, height):
-        data = struct.pack('>BBBBB128s', self.SEND_BMP_MODE, x, y, width, height, bmp)
-        self._send_command(data)
-        received = self._recv_command()
-        return recieved_data
+        response = self.send_formatted_data('>BBBBB128s', self.SEND_BMP_MODE, x, y, width, height, bmp)
+        return response
 
     def display_bargraph(self, sequence):
-        data = struct.pack('>B24s', self.SEND_BARGRAPH_MODE, sequence)
-        self._send_command(data)
-        received = self._recv_command()
-        return recieved_data
+        response = self.send_formatted_data('>B24s', self.SEND_BARGRAPH_MODE, sequence)
+        return response
 
     def is_requesting_data(self):
         requesting_data = False
         data = struct.pack('>B', self.GET_WAVE_MODE)
         self._send_command(data)
-        received = self._recv_command()
+        recieved_data = self._recv_command()
         print recieved_data
         if "wav_y" in recieved_data:
             requesting_data = True
 
         return requesting_data
 
-    def ping(self, attempts=5):
+    def is_up(self, max_attempts=5):
+        logger.debug("Attempting to ping microcontroller")
         status = False
+        attempts = max_attempts
         while attempts >= 0:
-            print"pings left: " + str(attempts)
-            self._send_command(struct.pack('>B', self.SEND_PING_MODE))
-            data = self._recv_command()
-            print "mc returned: " + str(data)
-            if data:
+            logger.debug("%i of %i attempts left", attempts, max_attempts)
+            if self.ping:
                 status = True
                 break
 
             attempts -= 1
+
         return status

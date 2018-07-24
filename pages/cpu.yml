@@ -1,0 +1,14 @@
+name: "CPU percentage"
+
+commands:
+  - { command: "ps -A -o %cpu | awk '{s+=$1} END {print s}'", update_when_displayed: True, variable_identifier: "$cpu" }
+
+text:
+  - { text: "CPU:", x: 0, y: 10, size: 2 }
+  - { text: "$cpu %", x: 50, y: 15, size: 1 }
+
+bmp:
+  - { file: "pages/images/cpu.bmp", x: 50, y: 1 }
+
+graph:
+  - { graph_value: "$cpu", green_threshold: 2, yellow_threshold: 4, red_threshold: 8 }

@@ -1,0 +1,29 @@
+name: "RAM percentage"
+
+commands:
+#  - { command: "memory_pressure | grep 'System-wide memory free percentage' | cut -d : -f 2 | tr -d ' %'", update_when_displayed: True, variable_identifier: "$free_mem" }
+- command: "memory_pressure | grep 'System-wide memory free percentage' | cut -d : -f 2 | tr -d ' %'"
+  update_when_displayed: True
+  variable_identifier: "$free_mem"
+
+text:
+  - text: "RAM:"
+    x: 0
+    y: 10
+    size: 2
+
+  - text: "$free_mem %"
+    x: 50
+    y: 15
+    size: 1
+
+bmp:
+  - file: "pages/images/test_4x4.bmp"
+    x: 50
+    y: 1
+
+graph:
+  - graph_value: "$free_mem"
+    green_threshold: 2
+    yellow_threshold: 4
+    red_threshold: 8
