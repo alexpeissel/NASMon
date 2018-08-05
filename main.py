@@ -10,51 +10,61 @@ __license__ = "MIT"
 
 import argparse
 import logging
+
 import logzero
 from logzero import logger
+import yaml
+
 from Monitor import Monitor
-
-
-def clamp(n, min_n, max_n):
-    return max(min(max_n, n), min_n)
 
 
 def main(args):
     """ Main entry point of the app """
-
     # Configure logging
-    log_levels = [logging.INFO, logging.DEBUG]
-    clamped_verbosity = clamp(args.verbose, 0, len(log_levels) - 1)
-    #logzero.loglevel(log_levels[clamped_verbosity])
-    logzero.loglevel(logging.DEBUG)
-    logger.info("Starting NASMon")
-    logger.info(args)
-
-    # TODO: Read config file
+    if args.verbose == 1:
+        logzero.loglevel(logging.INFO)
+    elif args.verbose == 2:
+        logzero.loglevel(logging.INFO)
+    elif args.verbose == 3:
+        logzero.loglevel(logging.DEBUG)
+    elif args.verbose == 4:
+        logzero.loglevel(logging.DEBUG)
+    else:
+        logzero.loglevel(logging.INFO)
 
     # Instantiate and start the monitor
+    logger.info("Starting NASMon")
     mon = Monitor(page_directory=args.page_directory, baud_rate=args.baud_rate, serial_port=args.serial_port)
     mon.start()
 
 
+def _parse_config_file(config_file):
+    config_file_data = None
+
+    with open(config_file) as stream:
+        try:
+            config_file_data = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            logger.error(exc)
+
+    return config_file_data
+
+
 if __name__ == "__main__":
     """ This is executed when run from the command line """
+
     parser = argparse.ArgumentParser()
 
-    # Required positional argument
-    #parser.add_argument("arg", help="Required positional argument")
-
-    # Optional argument flag which defaults to False
-    parser.add_argument("-f", "--flag", action="store_true", default=False)
-
     # Optional argument which requires a parameter (eg. -d test)
-    parser.add_argument("-p", "--page-dir", action="store", dest="page_directory", default="pages")
+    parser.add_argument("-c", "--config", action="store", dest="config_file", default="conf/conf.yml")
+    config_set = _parse_config_file("conf/conf.yml")
 
-    # Optional argument which requires a parameter (eg. -d test)
-    parser.add_argument("-b", "--baud-rate", action="store", dest="baud_rate", default="115200")
-
-    # Optional argument which requires a parameter (eg. -d test)
-    parser.add_argument("-s", "--serial-port", action="store", dest="serial_port", default="/dev/cu.wchusbserial1420")
+    parser.add_argument("-p", "--page-dir", action="store", dest="page_directory",
+                        default=config_set.get("pages", "pages").get("page_directory"))
+    parser.add_argument("-b", "--baud-rate", action="store", dest="baud_rate",
+                        default=config_set.get("serial", "115200").get("baud_rate"))
+    parser.add_argument("-s", "--serial-port", action="store", dest="serial_port",
+                        default=config_set.get("serial", "/dev/cu.wchusbserial1410").get("port"))
 
     # Optional verbosity counter (eg. -v, -vv, -vvv, etc.)
     parser.add_argument(
