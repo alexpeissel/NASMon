@@ -1,0 +1,23 @@
+name: "Current IP"
+
+commands:
+- command: "hostname"
+  update_when_displayed: False
+  variable_identifier: "$hostname"
+
+text:
+  - text: "$hostname"
+    x: 0
+    y: 5
+    size: 1
+
+bmp:
+  - file: "pages/images/test_4x4.bmp"
+    x: 50
+    y: 1
+
+graph:
+  - graph_value: "1"
+    green_threshold: 2
+    yellow_threshold: 4
+    red_threshold: 8
