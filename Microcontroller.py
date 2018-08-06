@@ -11,6 +11,7 @@ __license__ = "MIT"
 from cobs import cobs
 import serial
 import struct
+import time
 from logzero import logger
 
 class Microcontroller(object):
@@ -99,14 +100,13 @@ class Microcontroller(object):
             # finished reading an entire COBS structure
             if c == '\x00':
                 # grab the data and reset the buffer
+                logger.debug("")
                 data = self._read_buf[0:self._read_buf_pos]
                 self._reset_read_buffer()
 
                 # return decoded data
-                data_length = str(len(data))
                 decoded = cobs.decode(str(bytearray(data)))
-                decoded_length = "Sending " + str(len(decoded)) + " bytes"
-                print "Data length: " + data_length + ", encoded length: " + decoded_length
+                logger.debug("Decoded (%i bytes): %s", len(data), str(data))
                 return decoded
 
             # still got reading to do
@@ -123,7 +123,6 @@ class Microcontroller(object):
                     raise RuntimeError("IO read buffer overflow :(")
 
     def send_formatted_data(self, data_format, mode, *args):
-        print args
         if args:
             data = struct.pack(data_format, mode, *args)
         else:
@@ -133,12 +132,16 @@ class Microcontroller(object):
         received_data = self._recv_command()
         return received_data
 
+    def clear_displays(self):
+        response = self.send_formatted_data('>B', self.SEND_CLEAR_MODE)
+        return response
+
     def ping(self):
         response = self.send_formatted_data('>B', self.SEND_PING_MODE)
         return response
 
-    def clear_displays(self):
-        response = self.send_formatted_data('>B', self.SEND_CLEAR_MODE)
+    def get_wave_status(self):
+        response = self.send_formatted_data('>B', self.GET_WAVE_MODE)
         return response
 
     def display_text(self, text, x, y, size):
@@ -146,7 +149,7 @@ class Microcontroller(object):
         return response
 
     def display_bmp(self, bmp, x, y, width, height):
-        response = self.send_formatted_data('>BBBBB128s', self.SEND_BMP_MODE, x, y, width, height, bmp)
+        response = self.send_formatted_data('>BBBBB128s', self.SEND_BMP_MODE, width, height, x, y, bmp)
         return response
 
     def display_bargraph(self, sequence):
@@ -155,11 +158,8 @@ class Microcontroller(object):
 
     def is_requesting_data(self):
         requesting_data = False
-        data = struct.pack('>B', self.GET_WAVE_MODE)
-        self._send_command(data)
-        recieved_data = self._recv_command()
-        print recieved_data
-        if "wav_y" in recieved_data:
+        response = self.get_wave_status()
+        if "wav_y" in response:
             requesting_data = True
 
         return requesting_data
@@ -168,10 +168,12 @@ class Microcontroller(object):
         logger.debug("Attempting to ping microcontroller")
         status = False
         attempts = max_attempts
+        time.sleep(2)
         while attempts >= 0:
             logger.debug("%i of %i attempts left", attempts, max_attempts)
             if self.ping:
                 status = True
+                logger.info("Microcontroller is up")
                 break
 
             attempts -= 1
