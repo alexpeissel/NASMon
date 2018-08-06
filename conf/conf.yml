@@ -1,6 +1,6 @@
 serial:
   port: /dev/cu.wchusbserial1420
-  baudrate: 11520
+  baud_rate: 115200
   timeout: 2
 
 pages:
