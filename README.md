@@ -1,7 +1,52 @@
-# NASMon
+# Description
 
-Arduino-powered system monitor with a Python backend.  Simply provide a set of 'pages', (files containing commands
-and )
+Arduino-powered system monitor, powered by a Python backend.  Built for
+getting information quickly out of headless hardware, like a NAS.
+
+TODO: Add a picture of the hardware
+
+# Features
+
+Capable of displaying text, images and values on an LED bar-graph.  All
+fully configurable from the backend; no extra Arduino code required!
+
+Run system commands/scripts and display their results on the monitor, e.g. :
+* CPU usage
+* RAM usage
+* Current internal/external IP
+* Analog meters
+* CPU temperature
+
+Configuration is simple and flexible using YAML formatted 'pages'.  To scroll
+through all pages, hold your hand up to the the IR sensor.
+
+Communication between the host PC and monitor hardware is using a custom protocol,
+facilitated by the [PacketSerial](https://github.com/bakercp/PacketSerial) library.
+
+* Display the current hostname:
+```
+name: "Current hostname"
+
+commands:
+- command: "hostname"
+  variable_identifier: "hostname"
+
+text:
+  - text: "$hostname"
+    x: 0
+    y: 0
+    size: 1
+```
+
+## TODO
+
+Lots of things to do:
+
+* Finish this README.md
+* Write install script
+* Support running server as daemon
+* Fade displays after not receiving any sensor input for 15 seconds
+* Make image sizing more efficient
 
 ## Getting Started (TODO)
 
@@ -19,9 +64,13 @@ Give examples
 
 The NASMon hardware is made completely out of off-the-shelf items:
 * [Arduino Nano] - Microcontroller
-* [Adafruit Bi-Color 24-Bar LED Bargraph] - (https://www.adafruit.com/product/1721) i2c led bargraph controlled by a MAX7219
+* [Adafruit Bi-Color 24-Bar LED Bargraph] - (https://www.adafruit.com/product/1721) i2c LED bargraph controlled by a MAX7219
 * [128 x 32 OLED] - i2c OLED display
 * [IR proximity sensor]
+
+TODO: Wiring diagram
+
+The electronics is designed to fit inside a laptop-sized optical bay.
 
 ### Installing (TODO)
 
