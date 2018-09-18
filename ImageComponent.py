@@ -8,13 +8,13 @@ __author__ = "Alexander Peissel"
 __version__ = "0.1.0"
 __license__ = "MIT"
 
-from logzero import logger
-from PIL import Image
 from string import Template
+from PIL import Image
+from logzero import logger
 
 
 class ImageComponent:
-    def __init__(self, image_file, x, y, width=0, height=0, rotation=0, image_data=None):
+    def __init__(self, image_file, x, y, width=0, height=0, rotation=0, image_data=None, is_sub_component=False):
         """
         Image Component
         Args:
@@ -31,6 +31,7 @@ class ImageComponent:
 
         self.image_file = image_file
         self.image_data = image_data
+        self.is_sub_component = is_sub_component
 
         self._base_image = None
         self.sub_image_components = []
@@ -46,9 +47,12 @@ class ImageComponent:
 
         # If the instance has been passed an image, (i.e. component is a sub-component) set the base image to the passed
         # in image.  Otherwise, assume that the component is the first instance and load in the image file as normal.
-        if self.image_data:
+        if self.image_data is not None:
+            logger.debug("Using passed in image")
             self._base_image = image_data
         else:
+            logger.info("Reading image from file")
+            logger.info(self.__dict__)
             self._base_image = Image.open(self.image_file)
             self.sub_image_components = self._generate_sub_image_components(self._base_image, width, height, rotation)
 
@@ -65,7 +69,15 @@ class ImageComponent:
         if self.image_file is not current_image_file:
             self._base_image = Image.open(self.image_file)
 
-    def get_bytes(self, encoding=None):
+    def get_as_dict(self):
+        """ Returns attributes as dictionary """
+        return {"bmp": self._get_bytes(),
+                "x": int(self.x),
+                "y": int(self.y),
+                "width": int(self.width),
+                "height": int(self.height)}
+
+    def _get_bytes(self, encoding=None):
         output = self._base_image.tobytes()
 
         if encoding:
@@ -79,6 +91,7 @@ class ImageComponent:
 
         logger.debug("Scaling image to %i x %i and rotating by %i degrees", width, height, rotation)
         transformed_image = self._transform_image(image, width, height, rotation)
+
         logger.debug("Splitting image into %i x %i tiles", tile_width, tile_height)
         sub_images = self._split_image(transformed_image, tile_width, tile_height)
 
@@ -86,18 +99,22 @@ class ImageComponent:
 
         # Create an image component for each tile
         for sub_image in sub_images:
-            print sub_image
             image_components.append(ImageComponent(self.image_file,
                                                    self.x + sub_image.get("x"),
                                                    self.y + sub_image.get("y"),
                                                    sub_image.get("width"),
                                                    sub_image.get("height"),
                                                    rotation,
-                                                   image_data=sub_image.get("image")))
+                                                   image_data=sub_image.get("image"),
+                                                   is_sub_component=True))
 
         return image_components
 
     def _transform_image(self, image, width, height, rotation):
+        """
+        Scale and rotate image. If no height or width is specified, the image is scaled to the maximum the display
+        will handle.
+        """
         size = (width, height)
 
         if width is 0:
@@ -109,6 +126,7 @@ class ImageComponent:
         return image.resize(size, Image.NEAREST).rotate(rotation, expand=True)
 
     def _split_image(self, image, tiles_wide, tiles_high):
+        """ Split image into tiles_wide x tiles_high and return as list """
         image_width, image_height = image.size
 
         tiles = []
@@ -116,12 +134,14 @@ class ImageComponent:
         for i in range(0, image_height, tiles_wide):
             for j in range(0, image_width, tiles_wide):
                 box = (j, i, j + tiles_wide, i + tiles_high)
-                cropped_image = image.crop(box).rotate(270)
+                cropped_image = image.crop(box)
+                cropped_image_width, cropped_image_height = cropped_image.size
                 tiles.append({"image": cropped_image,
                               "width": cropped_image.size[0],
                               "height": cropped_image.size[1],
-                              "x": j + tiles_wide,
-                              "y": i + tiles_high})
+                              "x": (j + tiles_wide) - cropped_image_width,
+                              "y": (i + tiles_high) - cropped_image_height})
 
         logger.debug("Split image into %i pieces", len(tiles))
+
         return tiles

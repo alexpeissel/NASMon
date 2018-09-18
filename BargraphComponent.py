@@ -8,8 +8,8 @@ __author__ = "Alexander Peissel"
 __version__ = "0.1.0"
 __license__ = "MIT"
 
-from logzero import logger
 from string import Template
+from logzero import logger
 
 
 class BargraphComponent:
