@@ -57,6 +57,13 @@ class BargraphComponent:
                                                        self.yellow_threshold,
                                                        self.red_threshold)
 
+    def get_as_dict(self):
+        """ Returns attributes as dictionary """
+        return {"bargraph_data": self.bargraph_data,
+                "green_threshold": int(self.green_threshold),
+                "yellow_threshold": int(self.yellow_threshold),
+                "red_threshold": int(self.red_threshold)}
+
     def _percent_to_bargraph(self, value, green_threshold, yellow_threshold, red_threshold):
         """
         Convert an numeric argument between 0 and 100 to a string parsed by the microcontroller

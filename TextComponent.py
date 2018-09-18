@@ -40,3 +40,10 @@ class TextComponent:
         for key, value in self._updatable_values.iteritems():
             interpolated_value = Template(str(value)).safe_substitute(command_output)
             self.__dict__[key] = interpolated_value
+
+    def get_as_dict(self):
+        """ Returns attributes as dictionary """
+        return {"text": self.text,
+                "x": int(self.x),
+                "y": int(self.y),
+                "size": int(self.size)}
