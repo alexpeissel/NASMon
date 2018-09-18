@@ -16,7 +16,6 @@ from logzero import logger
 
 class Microcontroller(object):
     """interface to an on-board microcontroller"""
-
     # Modes
     SEND_CLEAR_MODE = 1
     SEND_PING_MODE = 2
@@ -71,6 +70,7 @@ class Microcontroller(object):
 
         if data is None:
             data = []
+
         encoded = cobs.encode(str(bytearray(data)))
 
         logger.debug("Sending (chars): %s", encoded + '\x00')
@@ -78,7 +78,6 @@ class Microcontroller(object):
         self._serial.write(encoded + '\x00')
 
         self.commands_sent += 1
-        return True
 
     def _reset_read_buffer(self):
         self._read_buf[0:self._read_buf_pos] = [None] * self._read_buf_pos
@@ -87,9 +86,9 @@ class Microcontroller(object):
     def _recv_command(self):
         """Reads a full line from the microcontroller
         We expect to complete a read when this is invoked, so don't invoke unless
-        you expect to get data from the microcontroller. we raise a timeout if we
+        you expect to get data from the microcontroller. We raise a timeout if we
         cannot read a command in the alloted timeout interval."""
-        # we rely on the passed-in timeout
+
         while True:
             c = self._serial.read(1)
             if not c:
@@ -133,33 +132,31 @@ class Microcontroller(object):
         return received_data
 
     def clear_displays(self):
-        response = self.send_formatted_data('>B', self.SEND_CLEAR_MODE)
-        return response
+        return self.send_formatted_data('>B', self.SEND_CLEAR_MODE)
 
     def ping(self):
-        response = self.send_formatted_data('>B', self.SEND_PING_MODE)
-        return response
+        return self.send_formatted_data('>B', self.SEND_PING_MODE)
 
     def get_wave_status(self):
-        response = self.send_formatted_data('>B', self.GET_WAVE_MODE)
-        return response
+        return self.send_formatted_data('>B', self.GET_WAVE_MODE)
 
     def display_text(self, text, x, y, size):
-        response = self.send_formatted_data('>BBBB128s', self.SEND_TEXT_MODE, size, x, y, text)
-        return response
+         print text, x, y, size
+         return self.send_formatted_data('>BBBB128s', self.SEND_TEXT_MODE, int(size), int(x), int(y), str(text))
 
     def display_bmp(self, bmp, x, y, width, height):
-        response = self.send_formatted_data('>BBBBB128s', self.SEND_BMP_MODE, width, height, x, y, bmp)
-        return response
+        print bmp, x, y, width, height
+        return self.send_formatted_data('>BBBBB128s', self.SEND_BMP_MODE, width, height, x, y, bmp)
 
     def display_bargraph(self, sequence):
-        response = self.send_formatted_data('>B24s', self.SEND_BARGRAPH_MODE, sequence)
-        return response
+        print sequence
+        return self.send_formatted_data('>B24s', self.SEND_BARGRAPH_MODE, sequence)
 
     def is_requesting_data(self):
         requesting_data = False
+
         response = self.get_wave_status()
-        if "wav_y" in response:
+        if response != "nack_wav":
             requesting_data = True
 
         return requesting_data
