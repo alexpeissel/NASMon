@@ -10,10 +10,10 @@ __license__ = "MIT"
 
 import argparse
 import logging
+import yaml
 
 import logzero
 from logzero import logger
-import yaml
 
 from Monitor import Monitor
 
@@ -55,7 +55,7 @@ def _parse_config_file(config_file):
 
 
 def _merge_configs(config_from_file, command_line_args):
-    """ Merge the config from the file and the command line arguments """
+    """ Merge the config from the file and the command line arguments, (reference given to the command line args) """
     flat_config = {}
 
     for key in config_from_file.keys():
