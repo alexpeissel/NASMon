@@ -10,9 +10,9 @@ __license__ = "MIT"
 
 import argparse
 import logging
+import logzero
 import yaml
 
-import logzero
 from logzero import logger
 
 from Monitor import Monitor
@@ -21,6 +21,7 @@ from Monitor import Monitor
 def main(args):
     """ Main entry point of the app """
     # Configure logging
+    # TODO: Make verboisty levels more granular
     if args.get("verbose") == 1:
         logzero.loglevel(logging.INFO)
     elif args.get("verbose") == 2:
