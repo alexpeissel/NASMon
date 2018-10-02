@@ -1,0 +1,10 @@
+# Page name
+name: "Splash screen"
+
+bmp:
+  - image_file: "pages/images/banner.png"
+    x: 0
+    y: 0
+    width: 128
+    height: 32
+    rotation: 0

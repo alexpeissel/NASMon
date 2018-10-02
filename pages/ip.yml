@@ -1,23 +1,35 @@
-name: "Current IP"
+name: "Current hostname"
 
 commands:
-- command: "hostname"
-  update_when_displayed: False
-  variable_identifier: "$hostname"
+- command: "netstat -I en0 | tail -n1 | awk '{ print $4 }'"
+  variable_identifier: "ip"
+
+- command: netstat -I en0 | tail -n1 | awk '{ printf "%.0f" , $5/1000 }'
+  variable_identifier: "incoming_packets"
+
+- command: netstat -I en0 | tail -n1 | awk '{ printf "%.0f" , $7/1000 }'
+  variable_identifier: "outgoing_packets"
 
 text:
-  - text: "$hostname"
-    x: 0
-    y: 5
+  - text: "$ip"
+    x: 40
+    y: 0
+    size: 1
+
+  - text: "In: $incoming_packets k"
+    x: 40
+    y: 10
+    size: 1
+
+  - text: "Out: $outgoing_packets k"
+    x: 40
+    y: 20
     size: 1
 
 bmp:
-  - file: "pages/images/test_4x4.bmp"
-    x: 50
-    y: 1
-
-graph:
-  - graph_value: "1"
-    green_threshold: 2
-    yellow_threshold: 4
-    red_threshold: 8
+  - image_file: "pages/images/ethernet.png"
+    x: 0
+    y: 0
+    width: 25
+    height: 26
+    rotation: 0
