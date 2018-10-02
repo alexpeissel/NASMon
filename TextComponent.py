@@ -24,7 +24,10 @@ class TextComponent:
         """
 
         # Values we want the update method to apply a template to
-        self._updatable_values = {"text": text, "x": x, "y": y, "size": size}
+        self._updatable_values = {"text": text,
+                                  "x": x,
+                                  "y": y,
+                                  "size": size}
 
         # Copy the argument keys and values to self, allowing us to access them as attributes
         for key, value in self._updatable_values.iteritems():
@@ -38,6 +41,8 @@ class TextComponent:
         """
         logger.debug("Updating text component...")
         for key, value in self._updatable_values.iteritems():
+            # Apply the template, (i.e. look for values with the '$var' syntax and replace)
+            # See https://docs.python.org/2.4/lib/node109.html
             interpolated_value = Template(str(value)).safe_substitute(command_output)
             self.__dict__[key] = interpolated_value
 

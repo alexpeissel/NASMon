@@ -8,8 +8,8 @@ __author__ = "Alexander Peissel"
 __version__ = "0.1.0"
 __license__ = "MIT"
 
-from string import Template
 from logzero import logger
+from string import Template
 
 
 class BargraphComponent:
@@ -46,11 +46,11 @@ class BargraphComponent:
         """
         logger.debug("Updating bargraph component...")
         for key, value in self._updatable_values.iteritems():
+            # Apply the template, (i.e. look for values with the '$var' syntax and replace)
+            # See https://docs.python.org/2.4/lib/node109.html
             interpolated_value = Template(str(value)).safe_substitute(command_output)
             self.__dict__[key] = interpolated_value
 
-        # Apply the template, (i.e. look for values with the '$var' syntax and replace)
-        # See https://docs.python.org/2.4/lib/node109.html
         interpolated_graph_value = Template(self.value).safe_substitute(command_output)
         self.bargraph_data = self._percent_to_bargraph(interpolated_graph_value,
                                                        self.green_threshold,
@@ -64,7 +64,7 @@ class BargraphComponent:
 
     def _percent_to_bargraph(self, value, green_threshold, yellow_threshold, red_threshold):
         """
-        Convert an numeric argument between 0 and 100 to a string parsed by the microcontroller
+        Convert an numeric argument between 0 and 100 to a string parsable by the microcontroller
         Args:
             value: The value to be drawn on the bargraph.  Can be a number from 0-100, or a $variable
             green_threshold: Any value larger than this will be green
