@@ -76,7 +76,6 @@ class Page:
 
         # Create CommandComponents
         for command_component in data.get("commands", []):
-            print command_component
             self._command_components.append(CommandComponent(**command_component))
 
         # Create TextComponents

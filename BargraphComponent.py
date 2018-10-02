@@ -59,7 +59,6 @@ class BargraphComponent:
 
     def get_as_dict(self):
         """ Returns attributes as dictionary """
-        print self.bargraph_data
         return {"bargraph_data": self.bargraph_data}
 
     def _percent_to_bargraph(self, value, green_threshold, yellow_threshold, red_threshold):
