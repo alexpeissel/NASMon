@@ -15,6 +15,7 @@ __version__ = "0.1.0"
 __license__ = "MIT"
 
 import yaml
+
 from logzero import logger
 
 from TextComponent import TextComponent
@@ -73,6 +74,11 @@ class Page:
         # Set the page name
         self.name = data.get("name", "NASMon page")
 
+        # Create CommandComponents
+        for command_component in data.get("commands", []):
+            print command_component
+            self._command_components.append(CommandComponent(**command_component))
+
         # Create TextComponents
         for text_component in data.get("text", []):
             self.text_components.append(TextComponent(**text_component))
@@ -94,6 +100,3 @@ class Page:
             self.bargraph_components.append(BargraphComponent(**bargraph_component))
             break
 
-        # Create CommandComponents
-        for command_component in data.get("commands"):
-            self._command_components.append(CommandComponent(**command_component))
