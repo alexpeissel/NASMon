@@ -25,6 +25,4 @@ bmp:
 
 bargraph:
   - value: "$cpu"
-    green_threshold: 2
-    yellow_threshold: 4
-    red_threshold: 8
+
