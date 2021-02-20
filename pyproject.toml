@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "NASMon"
+version = "0.1.0"
+description = "Simple and flexible system monitor with support for images, text, LED bargraphs and long walks on the beach."
+authors = ["Alex Peissel <alexpeissel@googlemail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+Pillow = "^8.1.0"
+click = "^7.1.2"
+pyserial = "^3.5"
+PyYAML = "^5.4.1"
+Flask = "^1.1.2"
+click-config-file = "^0.6.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

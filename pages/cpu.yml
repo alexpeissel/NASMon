@@ -1,27 +1,23 @@
 name: "CPU percentage"
 
 commands:
-  - command: "ps -A -o %cpu | awk '{s+=$1} END {print s}'"
-    variable_identifier: "cpu"
+  - cpu: "ps -A -o %cpu | awk '{s+=$1} END {print s}'"
 
 text:
-  - text: "CPU:"
-    x: 45
-    y: 0
-    size: 2
+  - "CPU":
+      x: 45
+      y: 0
+      size: 2
 
-  - text: "$cpu%"
-    x: 70
-    y: 20
-    size: 1
+  - "$cpu%":
+      x: 70
+      y: 20
+      size: 1
 
-bmp:
+images:
   - image_file: "pages/images/cpu.png"
     x: 0
     y: 0
-    width: 32
-    height: 32
-    rotation: 0
 
 bargraph:
   - value: "$cpu"
