@@ -2,6 +2,7 @@ name: "CPU percentage"
 
 commands:
   - cpu: "ps -A -o %cpu | awk '{s+=$1} END {print s}'"
+  - current_date: "date"
 
 text:
   - "CPU":

@@ -19,6 +19,21 @@ click = ">=6.7"
 configobj = ">=5.0.6"
 
 [[package]]
+name = "click-logging"
+version = "1.0.1"
+description = "Logging integration for Click"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+click = "*"
+
+[package.extras]
+ci = ["coverage", "coveralls"]
+dev = ["pytest", "flake8", "python-semantic-release", "pre-commit", "commitizen"]
+
+[[package]]
 name = "configobj"
 version = "5.0.6"
 description = "Config file reading, writing and validation."
@@ -128,7 +143,7 @@ watchdog = ["watchdog"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "44ba1408dbc41d77df618ec54021be079f8eacd0dcd4eb2f785c42b30a9cf726"
+content-hash = "9f1bbc0acc56febdbd95b07c86b59b84f2c956df59e12fdcee57f68259bc5854"
 
 [metadata.files]
 click = [
@@ -138,6 +153,10 @@ click = [
 click-config-file = [
     {file = "click_config_file-0.6.0-py2.py3-none-any.whl", hash = "sha256:3c5802dec437ed596f181efc988f62b1069cd48a912e280cd840ee70580f39d7"},
     {file = "click_config_file-0.6.0.tar.gz", hash = "sha256:ded6ec1a73c41280727ec9c06031e929cdd8a5946bf0f99c0c3db3a71793d515"},
+]
+click-logging = [
+    {file = "click-logging-1.0.1.tar.gz", hash = "sha256:1c3b2835ad4834df7c42e47ac7591866535af499dded3a84403f14411c5041a8"},
+    {file = "click_logging-1.0.1-py2.py3-none-any.whl", hash = "sha256:3ce04f9fa93120343f5d727108f2066b59bd9c5aac2d770a02f37c69186dbf23"},
 ]
 configobj = [
     {file = "configobj-5.0.6.tar.gz", hash = "sha256:a2f5650770e1c87fb335af19a9b7eb73fc05ccf22144eb68db7d00cd2bcb0902"},

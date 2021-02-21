@@ -1,15 +1,21 @@
+import logging
 import serial
 import struct
 
 class Microcontroller():
-    def __init__(self, port, baudrate, timeout):
+    def __init__(self, port, baudrate, timeout, logger):
+        self.logger = logger
+
+        self.logger.debug(f"Opening port: {port} @ {baudrate} baud...")
         self._serial = serial.Serial(
             port=port,
             baudrate=baudrate,
             timeout=timeout)
 
         if not self._serial.isOpen():
-            raise ValueError("Couldn't open %s" % port)
+            raise ValueError(f"Couldn't open {port}")
+
+        self.logger.debug("Port opened successfully!")
 
         #self.reset()
 
@@ -21,16 +27,18 @@ class Microcontroller():
         else:
             data = struct.pack(data_format, command)
 
-        print(f'Sending command: {command}')
-
+        self.logger.debug(f'Sending data: {data.hex()}')
         self._serial.write(data)
+
         return self._serial.readline()
 
     def is_requesting_data(self):
         requesting = False
+
         if self._serial.inWaiting() > 0:
             print(self._serial.readline())
             requesting = True
+
         return requesting
 
     def stop(self):

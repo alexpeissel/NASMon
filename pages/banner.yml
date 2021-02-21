@@ -1,7 +1,7 @@
 # Page name
 name: "Splash screen"
 
-bmp:
+image:
   - image_file: "pages/images/banner.png"
     x: 0
     y: 0
