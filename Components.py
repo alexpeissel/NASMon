@@ -63,9 +63,9 @@ class ImageComponent(BaseComponent):
             width = self.image.size[0]
         if not height:
             height = self.image.size[1]
-        if not x:
+        if x is None:
             x = round((128 / 2) - self.image.size[0] / 2)
-        if not y:
+        if y is None:
             y = 0
 
         return {
