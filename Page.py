@@ -61,9 +61,12 @@ class Page():
             run_once = command_definition.get("run_once", False)
             command_definition.pop("run_once", None)
 
+            numeric = command_definition.get("numeric", False)
+            command_definition.pop("numeric", None)
+
             for name, command in command_definition.items():
                 runner = {}
-                runner[name] = Command(name, command, run_once)
+                runner[name] = Command(name, command, run_once=run_once, numeric=numeric)
                 command_runners.update(runner)
 
         return command_runners

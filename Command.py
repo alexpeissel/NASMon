@@ -1,14 +1,17 @@
 import logging
+import re
 import subprocess
 
 from loguru import logger
 
 
 class Command():
-    def __init__(self, name, command, run_once=False):
+    def __init__(self, name, command, run_once=False, numeric=False):
         self.name = name
         self.command = command
         self.run_once = run_once
+        self.numeric = numeric
+
         self.last_execution = None
 
         if self.run_once:
@@ -25,11 +28,19 @@ class Command():
             execution = subprocess.run(
                 command_line, check=True, shell=True, stdout=subprocess.PIPE, text=True, timeout=5)
 
-            result = {
-                self.name: execution.stdout.rstrip().encode(
+            command_output = execution.stdout.rstrip().encode(
                 "unicode_escape").decode("utf-8")
+
+            if self.numeric:
+                command_output = self._extract_first_number(command_output)
+
+            result = {
+                self.name: command_output
             }
 
             self.last_execution = result
 
         return result
+
+    def _extract_first_number(self, string):
+        return re.findall('\d+', str(string))[0]

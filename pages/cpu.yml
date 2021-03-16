@@ -3,34 +3,36 @@ pre_render: true
 
 commands:
   # - cpu: "ps -A -o %cpu | awk '{s+=$1} END {print s}'"
-  - cpu: "echo %RANDOM%"
+  - cpu: "wmic cpu get loadpercentage /value"
+    numeric: true
   - current_date: "echo %date%"
   - hostname: "hostname"
     run_once: true
 
 text:
-  - text: "Host: {{hostname}}"
-    x: 5
+  - text: "-- {{hostname}} --"
+    x: 0
     y: 0
     size: 1
 
-  - text: "CPU: {{cpu}}%"
-    x: 45
-    y: 0
+  - text: "CPU:"
+    x: 40
+    y: 12
     size: 2
 
   - text: "{{cpu}}%"
-    x: 70
-    y: 20
+    x: 90
+    y: 16
     size: 1
 
 images:
   - image: "pages/images/cpu.png"
     x: 0
-    y: 0
+    y: 5
+
 
 bargraph:
-  - value: 80 
+  - value: "{{cpu}}"
     green_threshold: 0
     yellow_threshold: 50
     red_threshold: 75
