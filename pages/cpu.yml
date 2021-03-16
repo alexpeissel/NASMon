@@ -1,25 +1,36 @@
 name: "CPU percentage"
+pre_render: true
 
 commands:
-  - cpu: "ps -A -o %cpu | awk '{s+=$1} END {print s}'"
-  - current_date: "date"
+  # - cpu: "ps -A -o %cpu | awk '{s+=$1} END {print s}'"
+  - cpu: "echo %RANDOM%"
+  - current_date: "echo %date%"
+  - hostname: "hostname"
+    run_once: true
 
 text:
-  - "CPU":
-      x: 45
-      y: 0
-      size: 2
+  - text: "Host: {{hostname}}"
+    x: 5
+    y: 0
+    size: 1
 
-  - "$cpu%":
-      x: 70
-      y: 20
-      size: 1
+  - text: "CPU: {{cpu}}%"
+    x: 45
+    y: 0
+    size: 2
+
+  - text: "{{cpu}}%"
+    x: 70
+    y: 20
+    size: 1
 
 images:
-  - image_file: "pages/images/cpu.png"
+  - image: "pages/images/cpu.png"
     x: 0
     y: 0
 
 bargraph:
-  - value: "$cpu"
-
+  - value: 80 
+    green_threshold: 0
+    yellow_threshold: 50
+    red_threshold: 75

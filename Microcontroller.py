@@ -2,11 +2,10 @@ import logging
 import serial
 import struct
 
+from loguru import logger
 class Microcontroller():
-    def __init__(self, port, baudrate, timeout, logger):
-        self.logger = logger
-
-        self.logger.debug(f"Opening port: {port} @ {baudrate} baud...")
+    def __init__(self, port, baudrate, timeout):
+        logger.debug(f"Opening port: {port} @ {baudrate} baud...")
         self._serial = serial.Serial(
             port=port,
             baudrate=baudrate,
@@ -15,7 +14,7 @@ class Microcontroller():
         if not self._serial.isOpen():
             raise ValueError(f"Couldn't open {port}")
 
-        self.logger.debug("Port opened successfully!")
+        logger.debug("Port opened successfully!")
 
         #self.reset()
 
@@ -26,8 +25,9 @@ class Microcontroller():
             data = struct.pack(data_format, command, *args)
         else:
             data = struct.pack(data_format, command)
-
-        self.logger.debug(f'Sending data: {data.hex()}')
+        
+        logger.debug(f"Sending {len(data)} bytes, (command byte: {command_byte}) to uC")
+        logger.trace(f"Sending data: {data.hex()}")
         self._serial.write(data)
 
         return self._serial.readline()
@@ -36,8 +36,11 @@ class Microcontroller():
         requesting = False
 
         if self._serial.inWaiting() > 0:
-            print(self._serial.readline())
-            requesting = True
+            response = self._serial.readline().decode("utf-8") 
+            if "req" in response:
+                requesting = True
+            else:
+                logger.error(f"Got non-request type message from uC: {response}")
 
         return requesting
 

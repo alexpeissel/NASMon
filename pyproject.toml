@@ -11,10 +11,12 @@ Pillow = "^8.1.0"
 click = "^7.1.2"
 pyserial = "^3.5"
 PyYAML = "^5.4.1"
-Flask = "^1.1.2"
 click-config-file = "^0.6.0"
-click-logging = "^1.0.1"
 watchdog = "^2.0.1"
+chevron = "^0.14.0"
+loguru = "^0.5.3"
+requests = "^2.25.1"
+
 
 [tool.poetry.dev-dependencies]
 
