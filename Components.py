@@ -22,8 +22,6 @@ class BaseComponent():
         transformed = self._transform(**rendered_dict)
         return transformed
 
-class CommandComponent(BaseComponent):
-    pass
 
 class TextComponent(BaseComponent):
     def _transform(self, text=None, x=None, y=None, size=None):
@@ -78,7 +76,7 @@ class ImageComponent(BaseComponent):
 
 
 class BargraphComponent(BaseComponent):
-    BARGRAPH_LENGTH=23
+    BARGRAPH_LENGTH = 23
     PERCENT = 100.0 / BARGRAPH_LENGTH
 
     def _transform(self, value=None, green_threshold=0,  yellow_threshold=50,  red_threshold=75):
@@ -95,7 +93,7 @@ class BargraphComponent(BaseComponent):
                     bargraph_data[i] = 'g'
                 else:
                     bargraph_data[i] = 'o'
-        
+
         return {
             "graph_bytes": bytes("".join(bargraph_data), "utf-8")
         }

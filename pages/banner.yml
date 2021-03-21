@@ -6,3 +6,6 @@ images:
     x: 0
     y: 0
     rotation: 0
+
+bargraph:
+- value: 100

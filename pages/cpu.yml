@@ -1,12 +1,15 @@
 name: "CPU percentage"
-pre_render: true
 
 commands:
-  # - cpu: "ps -A -o %cpu | awk '{s+=$1} END {print s}'"
   - cpu: "wmic cpu get loadpercentage /value"
+      # Windows: wmic cpu get loadpercentage /value
+      # Mac: ps -A -o %cpu | awk '{s+=$1} END {print s}'
+      # Linux: ps -A -o pcpu | tail -n+2 | paste -sd+ | bc'
     numeric: true
-  - current_date: "echo %date%"
   - hostname: "hostname"
+      # Windows: hostname
+      # Mac: hostname
+      # Linux: hostname
     run_once: true
 
 text:
@@ -29,7 +32,6 @@ images:
   - image: "pages/images/cpu.png"
     x: 0
     y: 5
-
 
 bargraph:
   - value: "{{cpu}}"

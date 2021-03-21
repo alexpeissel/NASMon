@@ -24,20 +24,24 @@ class Command():
             result = self.last_execution
         else:
             logger.debug(f"Executing command: {self.command}")
-            command_line = self.command.split()
-            execution = subprocess.run(
-                command_line, check=True, shell=True, stdout=subprocess.PIPE, text=True, timeout=5)
 
+            try:
+                execution = subprocess.run(
+                    self.command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=5)
+            except subprocess.CalledProcessError as e:
+                raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+    
             command_output = execution.stdout.rstrip().encode(
                 "unicode_escape").decode("utf-8")
 
             if self.numeric:
+                logger.debug("numeric flag is set, stripping all non-numeric characters")
                 command_output = self._extract_first_number(command_output)
 
             result = {
                 self.name: command_output
             }
-
+            logger.debug(f"Command returned: {command_output}")
             self.last_execution = result
 
         return result

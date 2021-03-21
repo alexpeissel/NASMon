@@ -1,8 +1,11 @@
 name: "RAM percentage"
 
 commands:
-- command: "memory_pressure | grep 'System-wide memory free percentage' | cut -d : -f 2 | tr -d ' %'"
-  variable_identifier: "free_mem"
+- free_mem: powershell -c "(Get-WmiObject Win32_OperatingSystem | Measure-Object FreePhysicalMemory -Sum).sum/1MB"
+  numeric: true
+      # Windows: (Get-WmiObject Win32_OperatingSystem | Measure-Object FreePhysicalMemory -Sum).sum/1MB
+      # Mac: memory_pressure | grep 'System-wide memory free percentage' | cut -d : -f 2 | tr -d ' %'
+      # Linux: 
 
 text:
   - text: "RAM:"
@@ -10,19 +13,19 @@ text:
     y: 0
     size: 2
 
-  - text: "$free_mem%"
+  - text: "{{free_mem}} %"
     x: 70
     y: 20
     size: 1
 
-bmp:
-  - image_file: "pages/images/chip.png"
+images:
+  - image: "pages/images/chip.png"
     x: 0
     y: 0
-    width: 26
+    width: 32
     height: 32
     rotation: 0
 
 bargraph:
-  - value: "$free_mem"
+  - value: "{{free_mem}}"
 

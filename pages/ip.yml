@@ -1,35 +1,40 @@
-name: "Current hostname"
+name: "Network info"
 
 commands:
-- command: "netstat -I en0 | tail -n1 | awk '{ print $4 }'"
-  variable_identifier: "ip"
-
-- command: netstat -I en0 | tail -n1 | awk '{ printf "%.0f" , $5/1000 }'
-  variable_identifier: "incoming_packets"
-
-- command: netstat -I en0 | tail -n1 | awk '{ printf "%.0f" , $7/1000 }'
-  variable_identifier: "outgoing_packets"
+- ip: powershell -c "(Test-Connection -ComputerName (hostname) -Count 1).IPV4Address.IPAddressToString"
+  run_once: true
+    # Windows: powershell - "(Test-Connection -ComputerName (hostname) -Count 1).IPV4Address.IPAddressToString"
+    # Mac: netstat -I en0 | tail -n1 | awk '{ print $4 }'
+    # Linux: 
+- incoming_packets: netstat -s -p IP | findstr /c:"Packets Received"
+  numeric: true
+    # Windows: netstat -s -p IP | findstr /c:"Packets Received"
+    # Mac: netstat -I en0 | tail -n1 | awk '{ printf "%.0f" , $5/1000 }'
+    # Linux: 
+- outgoing_packets: netstat -s -p IP | findstr /c:"Output Requests"
+  numeric: true
+    # Windows: netstat -s -p IP | findstr /c:"Output Requests"
+    # Mac: netstat -I en0 | tail -n1 | awk '{ printf "%.0f" , $7/1000 }'
+    # Linux: 
 
 text:
-  - text: "$ip"
+  - text: "{{ip}}"
     x: 40
     y: 0
     size: 1
 
-  - text: "In: $incoming_packets k"
+  - text: "In: {{incoming_packets}} k"
     x: 40
     y: 10
     size: 1
 
-  - text: "Out: $outgoing_packets k"
+  - text: "Out: {{outgoing_packets}} k"
     x: 40
     y: 20
     size: 1
 
-bmp:
-  - image_file: "pages/images/ethernet.png"
+images:
+  - image: "pages/images/ethernet.png"
     x: 0
     y: 0
-    width: 25
-    height: 26
     rotation: 0
