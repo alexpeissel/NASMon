@@ -1,101 +1,72 @@
-# -*- coding: utf-8 -*-
-"""
-Pages
-A page is a collection of data that will be displayed on the screen and bargraph of the monitor.
-Pages have the following attributes:
-- name: the name of the page
-- text: static or interpolated text that can be shown on the display
-- bmp: 1 bit bitmaps
-- bargraph: a static or interpolated 0-100 value that is shown on the bargraph, with definable thresholds for colour
-- commands
-"""
-
-__author__ = "Alexander Peissel"
-__version__ = "0.1.0"
-__license__ = "MIT"
-
+import chevron
+import json
+import logging
 import yaml
 
-from logzero import logger
+from loguru import logger
 
-from TextComponent import TextComponent
-from ImageComponent import ImageComponent
-from BargraphComponent import BargraphComponent
-from CommandComponent import CommandComponent
+from Command import Command
+from Components import TextComponent, ImageComponent, BargraphComponent
 
-
-class Page:
+class Page():
     def __init__(self, page_file):
-        self.name = ""
-        self.text_components = []
-        self.bmp_components = []
-        self.bargraph_components = []
-        self._command_components = []
-        self._command_outputs = {}
+        # Parse the page config yaml
+        _parsed_page_config = self._read_config(page_file)
 
-        self._parse_page_file(page_file)
+        # Define command runners and cache
+        self.command_runners = self._build_commands_lookup(
+            _parsed_page_config.get("commands", []))
+        self.command_cache = {}
+        self.update()
 
-    def get_text_components(self):
-        """ Return a list of interpolated text dicts """
-        self._update_components(self.text_components)
-        return self.text_components
+        # Page config components
+        logger.debug("Creating components from config")
+        self.text_components = [TextComponent(definition) for definition in _parsed_page_config.get("text", [])]
+        self.image_components = [ImageComponent(definition) for definition in _parsed_page_config.get("images", [])]
+        self.bargraph_component = [BargraphComponent(definition) for definition in _parsed_page_config.get("bargraph", [])]
 
-    def get_bmp_components(self):
-        """ Return a list of interpolated bmp dicts """
-        # TODO: fix the update_components method for images
-        #self._update_components(self.bmp_components)
-        return self.bmp_components
+    @property
+    def text(self):
+        return self._get_rendered_components(self.text_components)
 
-    def get_bargraph_components(self):
-        """ Return a list of interpolated bargraph dicts """
-        self._update_components(self.bargraph_components)
-        return self.bargraph_components
+    @property
+    def images(self):
+        return self._get_rendered_components(self.image_components)
+    
+    @property
+    def bargraph(self):
+        return self._get_rendered_components(self.bargraph_component)
 
-    def update_command_outputs(self):
-        """ Runs each command component and adds the result to the self._command_outputs dict, e.g. {'cpu': '32'} """
-        for component in self._command_components:
-            component.update()
-            self._command_outputs[component.variable_identifier] = component.result
+    def update(self):
+        logger.debug("Updating command cache for page")
+        for name, command in self.command_runners.items():
+            logger.debug(f"Updating command for key: {name}")
+            self.command_cache.update(command.execute())
 
-    def _update_components(self, component_list):
-        """ Call update method on any list of components """
+    def _get_rendered_components(self, component_list):
+        components = []
         for component in component_list:
-            component.update(self._command_outputs)
+            components.append(component.render(self.command_cache))
 
-    def _parse_page_file(self, page_file):
-        """ Parse YAML page files and set public attributes """
-        # Parse YAML
-        with open(page_file) as stream:
-            try:
-                data = yaml.safe_load(stream)
-            except yaml.YAMLError as exc:
-                logger.error(exc)
+        return components
 
-        # Set the page name
-        self.name = data.get("name", "NASMon page")
+    def _read_config(self, page_file):
+        with open(page_file, "r") as f:
+            return yaml.safe_load(f)
+    
+    def _build_commands_lookup(self, commands):
+        command_runners = {}
 
-        # Create CommandComponents
-        for command_component in data.get("commands", []):
-            self._command_components.append(CommandComponent(**command_component))
+        for command_definition in commands:
+            run_once = command_definition.get("run_once", False)
+            command_definition.pop("run_once", None)
 
-        # Create TextComponents
-        for text_component in data.get("text", []):
-            self.text_components.append(TextComponent(**text_component))
+            numeric = command_definition.get("numeric", False)
+            command_definition.pop("numeric", None)
 
-        # Create BMPComponents
-        for bmp_component in data.get("bmp", []):
-            logger.debug("Creating initial image component")
-            initial_component = ImageComponent(**bmp_component)
+            for name, command in command_definition.items():
+                runner = {}
+                runner[name] = Command(name, command, run_once=run_once, numeric=numeric)
+                command_runners.update(runner)
 
-            logger.debug("Appending %i sub-images to image component list", len(initial_component.sub_image_components))
-            for image_component in initial_component.sub_image_components:
-                self.bmp_components.append(image_component)
-
-        # Create one BargraphComponent
-        for bargraph_component in data.get("bargraph", []):
-            if len(data.get("bargraph", [])) > 1:
-                logger.warn("Only 1 graph value is allowed, taking the first value only.")
-
-            self.bargraph_components.append(BargraphComponent(**bargraph_component))
-            break
-
+        return command_runners

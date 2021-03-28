@@ -1,121 +1,90 @@
-# -*- coding: utf-8 -*-
-"""
-Monitor
-Main loop for NASMon
-"""
+import os
+import random
+import string
+import time
+import yaml
 
-__author__ = "Alex Peissel"
-__version__ = "0.1.0"
-__license__ = "MIT"
+from loguru import logger
 
-import glob
-
-from logzero import logger
+from watchdog.observers import Observer
+from watchdog.events import PatternMatchingEventHandler
 
 from Microcontroller import Microcontroller
 from Page import Page
 
+class Monitor():
+    def __init__(self, port, baudrate, timeout, page_dir):        
+        self._microcontroller = Microcontroller(port, baudrate, timeout)
+        logger.info(f"NASMon running, connected to device at port: {port}")
 
-class Monitor:
-    """ Main class """
+        self._page_directory = page_dir
+        logger.debug(f'Page directory: {page_dir}')
 
-    def __init__(self, page_directory, serial_port, baud_rate):
-        """Loads pages from page_directory and connects to microcontroller.
-        Args:
-            page_directory: The directory containing pages in .yml format.
-            serial_port: The serial port or path to a serial device.
-            baud_rate: The bit rate for serial communication.
-        """
-        # Index of page to display
-        self.current_page_index = 0
+        self.page_dir = page_dir
+        self._page_list = self._build_page_list(page_dir)
+        self._page_list_index = 0
 
-        # Where the program will look to find pages
-        self.page_directory = page_directory
+        self._page_file_update_handler = PatternMatchingEventHandler(
+            patterns=["*.yml", "*.yaml"], 
+            ignore_directories=True, 
+            case_sensitive=False
+            )
 
-        # A list of parsed pages
-        self.pages = self._build_page_list(self.page_directory)
+        self._page_file_update_handler.on_created = self._handle_page_file_change_events
+        self._page_file_update_handler.on_modified = self._handle_page_file_change_events
+        self._page_file_update_handler.on_deleted = self._handle_page_file_change_events
 
-        # Instantiate a microcontroller
-        self.mc = Microcontroller(serial_port, baud_rate)
+        self._observer = Observer()
+        self._observer.schedule(self._page_file_update_handler, page_dir, recursive=False)
+
+    def _build_page_list(self, page_dir):
+        page_list = []
+
+        for entry in os.scandir(page_dir):
+            if entry.path.endswith((".yaml", ".yml")) and entry.is_file():
+                page_list.append(Page(entry.path))
+                logger.debug(f"Found page file: {entry.path}")
+        
+        logger.debug(f"Number of pages: {len(page_list)}")
+        return page_list
+
+    def _handle_page_file_change_events(self, event):
+        logger.info(f"Page file {event.src_path} {event.event_type}, reloading page list...")
+        self._page_list = self._build_page_list(self.page_dir)
+        logger.info("Reload complete")
 
     def start(self):
-        """ Check the microcontroller is up and run the test routines.  After that, start looping forever, querying the
-        microcontroller for whether the sensor is activated.  If the sensor is active, clear the displays and cycle
-        through the page list, displaying the current page.
+        logger.info("Starting listening for file updates")
+        self._observer.start()
+        
+        self._microcontroller.clear_displays()
 
-        """
-        if self.mc.is_up():
-            logger.info("Microcontroller ready")
-        else:
-            logger.error("Microcontroller did not respond")
-            logger.error("Exiting")
-            exit(1)
-
-        # Main loop
+        logger.info("Ready to send pages.")
         while True:
-            if self.mc.is_requesting_data():
-                # Clear display and bargraph
-                self.mc.clear_displays()
+            if self._microcontroller.is_requesting_data():
+                current_page = self._page_list[self._page_list_index]
+                current_page.update()
 
-                # Get the current page and store in current_page
-                current_page = self.pages[self.current_page_index]
-                logger.info("Displaying page: %s", current_page.name)
+                self._microcontroller.clear_displays()
 
-                # Show the page at index current_page_index
-                self._show_page(self.pages[self.current_page_index])
+                for text in current_page.text:
+                    logger.trace(f"Rendered text component: {text}")
+                    self._microcontroller.display_text(**text)
+                
+                for image in current_page.images:
+                    logger.trace(f"Rendered image component: {image}")
+                    self._microcontroller.display_image(**image)
+                
+                for bargraph in current_page.bargraph:
+                    logger.trace(f"Rendered bargraph component: {bargraph}")
+                    self._microcontroller.display_bargraph(**bargraph)
 
-                # Check if it is time to cycle back to the start of the page list
-                if self.current_page_index == len(self.pages) - 1:
-                    self.current_page_index = 0
+                if self._page_list_index == len(self._page_list) - 1:
+                    self._page_list_index = 0
                 else:
-                    self.current_page_index += 1
+                    self._page_list_index += 1
 
     def stop(self):
-        """ Stop the microcontroller and quit """
-        logger.info("Stopping application")
-        self.mc.stop()
-
-        logger.info("Exiting")
-        exit(0)
-
-    def _build_page_list(self, page_directory):
-        """ For each page file, (*.yml file in page_directory) create a Page object, append to list and return """
-        logger.info("Building page list from directory: %s", page_directory)
-
-        parsed_pages = []
-
-        # Look for all files that match *.yml inside of the page_directory
-        matching_files = glob.glob(page_directory + "/*.yml")
-        logger.debug("Found files: %s", matching_files)
-
-        # Loop through each file and create a page object
-        for page_file in matching_files:
-            logger.info("Found page file: %s, parsing...", page_file)
-
-            # Create a new page and append to the parsed_pages list
-            page = Page(page_file)
-            parsed_pages.append(page)
-            logger.info("Added page: %s", page.name)
-
-        logger.info("Finished parsing %i pages", len(matching_files))
-        return parsed_pages
-
-    def _show_page(self, page):
-        """ Loop through the page components, (text, bitmaps and bargraph) and send to the microcontroller """
-        logger.debug("Updating command output table")
-
-        # Run all commands components for a page and store the result for reference later
-        page.update_command_outputs()
-
-        # Loop through all components and package result as keyworded arguments to the microcontroller
-        for text_data in page.get_text_components():
-            logger.debug("Displaying text component: %s", text_data.get_as_dict())
-            self.mc.display_text(**text_data.get_as_dict())
-
-        for bmp_data in page.get_bmp_components():
-            logger.debug("Displaying text component: %s", bmp_data.get_as_dict())
-            self.mc.display_bmp(**bmp_data.get_as_dict())
-
-        for bargraph_data in page.get_bargraph_components():
-            logger.debug("Displaying bargraph component: %s", bargraph_data.get_as_dict())
-            self.mc.display_bargraph(**bargraph_data.get_as_dict())
+        self._microcontroller.stop()
+        self._observer.stop()
+        self._observer.join()

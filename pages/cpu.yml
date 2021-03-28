@@ -1,28 +1,40 @@
 name: "CPU percentage"
 
 commands:
-  - command: "ps -A -o %cpu | awk '{s+=$1} END {print s}'"
-    variable_identifier: "cpu"
+  - cpu: "wmic cpu get loadpercentage /value"
+      # Windows: wmic cpu get loadpercentage /value
+      # Mac: ps -A -o %cpu | awk '{s+=$1} END {print s}'
+      # Linux: ps -A -o pcpu | tail -n+2 | paste -sd+ | bc'
+    numeric: true
+  - hostname: "hostname"
+      # Windows: hostname
+      # Mac: hostname
+      # Linux: hostname
+    run_once: true
 
 text:
-  - text: "CPU:"
-    x: 45
-    y: 0
-    size: 2
-
-  - text: "$cpu%"
-    x: 70
-    y: 20
-    size: 1
-
-bmp:
-  - image_file: "pages/images/cpu.png"
+  - text: "-- {{hostname}} --"
     x: 0
     y: 0
-    width: 32
-    height: 32
-    rotation: 0
+    size: 1
+
+  - text: "CPU:"
+    x: 40
+    y: 12
+    size: 2
+
+  - text: "{{cpu}}%"
+    x: 90
+    y: 16
+    size: 1
+
+images:
+  - image: "pages/images/cpu.png"
+    x: 0
+    y: 5
 
 bargraph:
-  - value: "$cpu"
-
+  - value: "{{cpu}}"
+    green_threshold: 0
+    yellow_threshold: 50
+    red_threshold: 75
